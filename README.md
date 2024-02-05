@@ -51,6 +51,18 @@ http://localhost:35000/
 Que lo llevara a consultar la API REST construida en el Taller1:
 ![](imagenes/raiz.png)
 
+**Un adicional que tiene este aplicativo web es que si usted desea observar únicamente los JSON que genera la API REST lo podrá hacer de la siguiente manera:**
+
+```
+http://localhost:35000/Peliculas/nombrePelicula
+```
+No olvide remplazar donde dice **nombrePelicula** por el nombre de la película de desea buscar ejemplo: 
+```
+http://localhost:35000/Peliculas/Barbie
+```
+Imagen
+![](imagenes/JSON.png)
+
 
 * Si usted desea ver la pagina web que se construyo con: HTML, JavaScript, CSS y que además tiene una imagen use la siguiente URL:
 
