@@ -95,6 +95,11 @@ http://localhost:35000/Tierra.png
 Imagen
 ![](imagenes/imagenPNG.png)
 
+* Si usted le ingreso al servidor web el nombre de una archivo que no se encuentra en el servidor local este la mandara un error 404 como se muestra en la siguiente imagen: 
+
+![](imagenes/Error_Pantalla.png)
+
+
 ### Construido con
 
 * [Maven](https://maven.apache.org/): Maven es un herramienta que proporciona una estructura estándar, gestión de dependencias y automatización de tareas en los proyectos software desarrollados en Java.

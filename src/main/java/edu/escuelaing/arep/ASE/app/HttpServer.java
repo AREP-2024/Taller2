@@ -3,6 +3,7 @@ package edu.escuelaing.arep.ASE.app;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -69,60 +70,74 @@ public class HttpServer {
         serverSocket.close();
     }
 
-    private static void resolverImagen(Socket clientSocket, String recurso) throws IOException{
-        FileInputStream fileInputStream = new FileInputStream("target/classes/public/" + recurso.split("/")[1]);
 
-        long tamañoArchivo = fileInputStream.available();
-        byte[] imagenBytes = new byte[(int) tamañoArchivo];
-        fileInputStream.read(imagenBytes);
-        fileInputStream.close();
+    /*
+        * Metodo que resuelve la peticion de una imagen
+        * @param clientSocket socket del cliente
+        * @param recurso nombre de la imagen
+        * @throws IOException si hay un error en la conexion
+        * @throws FileNotFoundException si no se encuentra la imagen
+     */
+    private static void resolverImagen(Socket clientSocket, String recurso) throws IOException{        
 
-        OutputStream out = clientSocket.getOutputStream();
-
-        out.write("HTTP/1.1 200 OK\r\n".getBytes());
-        out.write("Content-Length: ".getBytes());
-        out.write(String.valueOf(imagenBytes.length).getBytes());
-        out.write("\r\n".getBytes());
-        out.write("Content-Type: image/png\r\n".getBytes());
-        out.write("\r\n".getBytes());
-
-        out.write(imagenBytes);
-        out.flush();
-        out.close();
-
-    }
+        try{
+            FileInputStream fileInputStream = new FileInputStream("target/classes/public/" + recurso.split("/")[1]);
+            long tamañoArchivo = fileInputStream.available();
+            byte[] imagenBytes = new byte[(int) tamañoArchivo];
+            fileInputStream.read(imagenBytes);
+            fileInputStream.close();
     
+            OutputStream out = clientSocket.getOutputStream();
+    
+            out.write("HTTP/1.1 200 OK\r\n".getBytes());
+            out.write("Content-Length: ".getBytes());
+            out.write(String.valueOf(imagenBytes.length).getBytes());
+            out.write("\r\n".getBytes());
+            out.write("Content-Type: image/png\r\n".getBytes());
+            out.write("\r\n".getBytes());
+    
+            out.write(imagenBytes);
+            out.flush();
+            out.close();
 
+        }catch(FileNotFoundException e){
+            resolverError(clientSocket);
+        }
+
+
+    }  
+
+
+    /*
+        * Metodo que resuelve la peticion de un texto plano
+        * @param clientSocket socket del cliente
+        * @param recurso nombre del recurso
+        * @throws IOException si hay un error en la conexion
+        * @throws FileNotFoundException si no se encuentra el recurso     
+     */
     private static void resolverTextoPlano(Socket clientSocket, String recurso) throws IOException{
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-        HttpConnection httpConnection = new HttpConnection(GET_URL,GET_KEY);        
         String outputLine = "";
-        if (recurso.startsWith("/Peliculas")) {
-            outputLine = mostrarPelicula(httpConnection,recurso.split("/")[2]);                
-        }else if (recurso.equals("/")){                
-            outputLine = mostrarPagina("/pagina.html");
-        }else if(recurso.endsWith(".css")){
-            outputLine = mostrarEstilos(recurso);
-        }else if(recurso.endsWith(".html") || recurso.endsWith(".js")){
-            outputLine = mostrarPagina(recurso);            
-        }else{
-            outputLine = "HTTP/1.1 404 Not Found\r\n"
-            + "Content-Type: text/html\r\n"
-            + "\r\n"
-            + "<!DOCTYPE html>\n"
-            + "<html>\n"
-            + "<head>\n"
-            + "<meta charset=\"UTF-8\">\n"
-            + "<title>Title of the document</title>\n"
-            + "</head>\n"
-            + "<body>\n"
-            + "My Web Site\n"
-            + "</body>\n"
-            + "</html>\n";
-        }
-      
-        out.println(outputLine);
-        out.close();      
+        try{            
+            HttpConnection httpConnection = new HttpConnection(GET_URL,GET_KEY);     
+            
+            if (recurso.startsWith("/Peliculas")) {
+                outputLine = mostrarPelicula(httpConnection,recurso.split("/")[2]);                
+            }else if (recurso.equals("/")){                
+                outputLine = mostrarPagina("/pagina.html");
+            }else if(recurso.endsWith(".css")){
+                outputLine = mostrarEstilos(recurso);
+            }else if(recurso.endsWith(".html") || recurso.endsWith(".js")){
+                outputLine = mostrarPagina(recurso);            
+            }else{
+                throw new FileNotFoundException("No se encontro el recurso solicitado");
+            }
+            out.println(outputLine);
+            out.close(); 
+
+        }catch(FileNotFoundException e){
+            resolverError(clientSocket);
+        }      
 
     }
 
@@ -151,12 +166,18 @@ public class HttpServer {
 
     }
 
+
+    /*
+        * Metodo que muetra los estilos de la pagina
+        * @param path ruta del archivo de estilos
+        * @return String con los estilos
+        * @throws IOException si hay un error en la conexion
+        * @throws FileNotFoundException si no se encuentra el archivo de estilos
+     */
     public static String mostrarEstilos(String path) throws IOException{
         
         StringBuilder pagina = new StringBuilder();
-
         String outputLine;
-
         pagina.append("HTTP/1.1 200 OK\r\n");
         pagina.append("Content-Type: text/css\r\n");
         pagina.append("\r\n");
@@ -192,6 +213,26 @@ public class HttpServer {
 
         return pagina.toString();
 
+    }
+
+    private static void  resolverError(Socket clientSocket) throws IOException{
+        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        
+        String outputLine = "HTTP/1.1 404 Not Found\r\n"
+        + "Content-Type: text/html\r\n"
+        + "\r\n"
+        + "<!DOCTYPE html>\n"
+        + "<html>\n"
+        + "<head>\n"
+        + "<meta charset=\"UTF-8\">\n"
+        + "<title>Error</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "404 NOT FOUND \n"
+        + "</body>\n"
+        + "</html>\n";
+        out.println(outputLine);
+        out.close(); 
     }
     
 }
